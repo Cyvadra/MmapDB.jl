@@ -10,7 +10,7 @@ module MmapDB
 		)
 	openedFiles = Dict{Symbol, IOStream}()
 
-	function GenerateCode(T::DataType)::String
+	function GenerateCode(T::DataType)::Nothing
 		tName = string(T)
 		f = open(Config["cacheFolder"] * tName * ".jl", "w+")
 		# type definitions
@@ -18,7 +18,7 @@ module MmapDB
 		write(f, "$(tName)ReadOnly = $(tName)\n")
 		write(f, "_syms  = fieldnames($(tName)ReadOnly)\n")
 		write(f, "_types = Vector{DataType}(collect($(tName)ReadOnly.types))\n")
-		write(f, "@assert all(isprimitivetype.(_types)\n")
+		write(f, "@assert all(isprimitivetype.(_types))\n")
 		write(f, "\n")
 		# basic functions
 		write(f, """function Create!(dataFolder::String=Config["dataFolder"], numRows::Int=Config["dataLength"])::Nothing
@@ -101,8 +101,10 @@ module MmapDB
 		end
 		write(f, s)
 		close(f)
-		return Config["cacheFolder"] * tName * ".jl"
-	end
+		Main.include(Config["cacheFolder"] * tName * ".jl")
+		rm(Config["cacheFolder"] * tName * ".jl")
+		return nothing
+		end
 
 
 
