@@ -1,209 +1,121 @@
 module MmapDB
 
-	using Mmap; using Mmap: mmap
-	using ProgressMeter
-	using JSON
-
-	# export something
+	using Mmap; using Mmap:mmap
 
 	Config = Dict{String,Any}(
-			"IsInitialized" => false,
-			"DataFolder"    => "/tmp/Finance.jl/mmap/"
+		# where db data shall be saved
+			"dataFolder"  => "/mnt/data/test/",
+		# where generated files are writed into
+			"cacheFolder" => "/tmp/",
 		)
+	openedFiles = Dict{Symbol, IOStream}()
 
-	mutable struct Sequence
-		name::String
-		nrows_valid::Int64
-		nrows_capacity::Int64
-		elements_type::Vector{DataType}
-		elements_size::Vector{Int32}
-		elements_bytes::Int32
-		end
-	openedFiles = Dict{String, IOStream}()
-	openedSequences = Dict{String, Sequence}()
+	function GenerateCode(T::DataType)::String
+		tName = string(T)
+		f = open(Config["cacheFolder"] * tName * ".jl", "w+")
+		# type definitions
+		write(f, "$(tName)Dict = Dict{Symbol, Base.RefValue}()\n")
+		write(f, "$(tName)ReadOnly = $(tName)\n")
+		write(f, "_syms  = fieldnames($(tName)ReadOnly)\n")
+		write(f, "_types = Vector{DataType}(collect($(tName)ReadOnly.types))\n")
+		write(f, "@assert all(isprimitivetype.(_types)\n")
+		write(f, "\n")
+		# basic functions
+		write(f, """function Create!(dataFolder::String=Config["dataFolder"], numRows::Int=Config["dataLength"])::Nothing
+				# check params
+				dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
+				isdir(dataFolder) || mkdir(dataFolder)
+				for i in 1:length(_types)
+					f = open(dataFolder*string(_syms[i])*".bin", "w+")
+					openedFiles[_syms[i]] = f
+					$(tName)[_syms[i]] = Ref(mmap(
+						f, Vector{_types[i]}, numRows; grow=true, shared=false
+						))
+				end
+				write(dataFolder*"_num_rows", string(numRows))
+				return nothing
+				end
+			function Open(dataFolder::String=Config["dataFolder"], numRows::Int=Config["dataLength"])::Nothing
+				# check params
+				dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
+				isdir(dataFolder) || mkdir(dataFolder)
+				for i in 1:length(_types)
+					f = open(dataFolder*string(_syms[i])*".bin", "r+")
+					openedFiles[_syms[i]] = f
+					$(tName)[_syms[i]] = Ref(mmap(
+						f, Vector{_types[i]}, numRows; grow=false, shared=false
+						))
+				end
+				write(dataFolder*"_num_rows", string(numRows))
+				return nothing
+				end
 
-	function Init(folderPath::String)::String
-		if folderPath[end] !== '/'
-			folderPath = folderPath * '/'
-		end
-		Config["DataFolder"] = folderPath
-		if !isdir(folderPath)
-			folderPath = mkdir(Config["DataFolder"])
-		end
-		Config["IsInitialized"] = true
-		return folderPath
-		end
-	function initCheck()
-		if !Config["IsInitialized"]; throw("SetDataFolder first!"); end
-		end
+			function GetField(sym::Symbol, i)
+				return $(tName)[sym][][i]
+				end
+			function GetField(sym::Symbol, ids::Vector)::Vector
+				return $(tName)[sym][][ids]
+				end
+			function SetField(sym::Symbol, i, v)::Nothing
+				$(tName)[sym][][i] = v
+				return nothing
+				end
+			function SetFieldDiff(sym::Symbol, i, v)::Nothing
+				$(tName)[sym][][i] += v
+				return nothing
+				end
 
-	# Create
-	function SaveSequence!(dataName::String, v::Vector)::Nothing
-		# check
-		initCheck()
-		T = typeof(v[1])
-		if isprimitivetype(T)
-			throw("primitive types not implemented")
+			""")
+		# restore structure
+		s = "
+			function GetRow(i)::$(tName)ReadOnly
+				$(tName)ReadOnly("
+		tmpNames = string.(fieldnames(T))
+		tmpNamesU= uppercasefirst.(tmpNames)
+		tmpTypes = string.(T.types)
+		for i in 1:length(T.types)
+			s *= "
+					$(tName)Dict[:$(tmpNames[i])][][i],"
 		end
-		if !all(isprimitivetype.(T.types))
-			throw("complex structures not implemented!")
-		end
-		# prepare for creating files
-		if !isdir(Config["DataFolder"] * string(T))
-			mkdir(Config["DataFolder"] * string(T))
-		end
-		fnameBase = Config["DataFolder"] * "$T/$dataName"
-		fnameData = fnameBase * ".bin"
-		fnameLayout = fnameBase * ".layout"
-		# init io stream
-		io    = open(fnameData, "w+")
-		seq   = Sequence(
-				dataName,
-				length(v),
-				length(v),
-				collect(T.types),
-				map(x->x.size, T.types),
-				sum(map(x->x.size, T.types)),
-			)
-		# write layout file
-			write(fnameLayout, JSON.json(seq))
-		# write data
-		openedFiles[dataName] = io
-		prog = ProgressMeter.Progress(length(v); barlen=64)
-		for element in v
-			unsafe_write(io, convert(Ptr{T}, pointer_from_objref(element)), seq.elements_bytes)
-			next!(prog)
-		end
-		openedSequences[dataName] = seq
-		return nothing
-		end
+		s *= "
+					)
+				end"
+		write(f, s)
+		# extensive
+		s = ""
+		for i in 1:length(T.types)
+			s *= "
 
-	# Debug
-	function GetAllSequence(dataName::String, elementType::DataType)::Vector
-		# check
-		initCheck()
-		T = elementType
-		if isprimitivetype(T)
-			throw("not implemented")
+			function GetField$(tmpNamesU[i])(i)::$(tmpTypes[i])
+				return $(tName)Dict[:$(tmpNames[i])][][i]
+				end
+			function SetField$(tmpNamesU[i])(i, v)::Nothing
+				$(tName)Dict[:$(tmpNames[i])][][i] = v
+				return nothing
+				end
+			function SetFieldDiff$(tmpNamesU[i])(i, v)::Nothing
+				$(tName)Dict[:$(tmpNames[i])][][i] += v
+				return nothing
+				end
+			"
 		end
-		# load
-		fnameBase = Config["DataFolder"] * "$T/$dataName"
-		fnameData = fnameBase * ".bin"
-		_sizes = map(x->x.size, T.types)
-		_bytes = sum(_sizes)
-		# load io
-		io = open(fnameData, "r")
-		vSize = round(Int, filesize(io) / _bytes)
-		_len  = length(_sizes)
-		vec   = Vector{T}(undef,vSize)
-		for i in 1:vSize
-			vec[i] = T(zeros(_len)...)
-		end
-		# load data
-		prog  = ProgressMeter.Progress(vSize; barlen=64)
-		for i in 1:vSize
-			p = convert(Ptr{T}, pointer_from_objref(vec[i]))
-			unsafe_read(io, p, _bytes)
-			next!(prog)
-		end
-		return vec
-		end
-
-	# inner call
-	function OpenSequence(dataName::String, elementType::DataType)::Sequence
-		# check
-		initCheck()
-		T = elementType
-		if isprimitivetype(T)
-			throw("not implemented")
-		end
-		# load
-		fnameBase = Config["DataFolder"] * "$T/$dataName"
-		fnameData = fnameBase * ".bin"
-		_sizes = map(x->x.size, T.types)
-		_bytes = sum(_sizes)
-		# load io
-		io = open(fnameData, "r+")
-		vSize = round(Int, filesize(io) / _bytes)
-		_len  = length(_sizes)
-		openedFiles[dataName] = io
-		openedSequences[dataName] = Sequence(
-				dataName,
-				vSize,
-				vSize,
-				eval.(Symbol.(collect(T.types))),
-				_sizes,
-				_bytes,
-			)
-		return openedSequences[dataName]
-		end
-
-	# Get
-	function GetI(dataName::String, T::DataType, i::Int)
-		if !haskey(openedFiles, dataName)
-			OpenSequence(dataName, T)
-		end
-		seq = openedSequences[dataName]
-		io = openedFiles[dataName]
-		numElements = round(Int, filesize(io)/seq.elements_bytes)
-		if i <= 0 || i > numElements
-			throw("i from 1 to $numElements")
-		end
-		seek(io, (i-1)*seq.elements_bytes)
-		ret = T(zeros(length(T.types))...)
-		p = convert(Ptr{T}, pointer_from_objref(ret))
-		unsafe_read(io, p, seq.elements_bytes)
-		return ret
-		end
-	function GetRange(dataName::String, T::DataType, nFrom::Int, nTo::Int)::Vector
-		# load file
-		if !haskey(openedFiles, dataName)
-			OpenSequence(dataName, T)
-		end
-		seq = openedSequences[dataName]
-		io = openedFiles[dataName]
-		# check params
-		numElements = round(Int, filesize(io)/seq.elements_bytes)
-		if nFrom <= 0 || nTo <= 0
-			throw("index incorrect! should start from one.")
-		elseif nFrom > numElements && nTo > numElements
-			throw("index out of range! max $numElements")
-		end
-		# set params
-		nLen  = nTo - nFrom + 1
-		nFrom = (nFrom-1)*seq.elements_bytes
-		nTo   = (nTo-1)*seq.elements_bytes
-		nBytes= nLen * seq.elements_bytes
-		seek(io, nFrom)
-		# init empty structures
-		_len  = length(seq.elements_type)
-		vec   = [ T(zeros(_len)...) for i in 1:nLen ]
-		for i in 1:nLen
-			p = convert(Ptr{T}, pointer_from_objref(vec[i]))
-			unsafe_read(io, p, seq.elements_bytes)
-		end
-		return vec
-		end
-	function GetRange(dataName::String, T::DataType, r::UnitRange)::Vector
-		return GetRange(dataName, T, r[1], r[end])
-		end
-
-	# Update
-	function UpdateI(dataName::String, i::Int, v)
-		T = typeof(v)
-		seq = openedSequences[dataName]
-		io = openedFiles[dataName]
-		numElements = round(Int, filesize(io)/seq.elements_bytes)
-		if i <= 0 || i > numElements
-			throw("i from 1 to $numElements")
-		end
-		seek(io, (i-1)*seq.elements_bytes)
-		ret = T(zeros(length(T.types))...)
-		# p = convert(Ptr{T}, pointer_from_objref(ret))
-		# unsafe_read(io, p, seq.elements_bytes)
-		unsafe_write(io, convert(Ptr{T}, pointer_from_objref(v)), seq.elements_bytes)
-		return v
-		end
+		write(f, s)
+		close(f)
+		return Config["cacheFolder"] * tName * ".jl"
+	end
 
 
-end # module
+
+
+
+
+
+
+
+
+
+
+
+
+
+end
