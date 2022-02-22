@@ -1,48 +1,73 @@
 module MmapDB
 
-	using Mmap; using Mmap:mmap
+using Mmap; using Mmap:mmap
 
-	Config = Dict{String,Any}(
-		# where db data shall be saved
-			"dataFolder"  => "/mnt/data/test/",
-		# where generated files are writed into
-			"cacheFolder" => "/tmp/",
-		)
-	openedFiles = Dict{Symbol, IOStream}()
+Config = Dict{String,Any}(
+	# mark
+		"isInitiated" => false,
+	# where db data shall be saved
+		"dataFolder"  => "/mnt/data/test/",
+	# where generated files are writed into
+		"cacheFolder" => "/tmp/",
+	)
 
-	function GenerateCode(T::DataType)::Nothing
+function GenerateCode(T::DataType)
+	if !IsInitiated()
+		throw("Init data folder first!")
+	end
+	# base values
 		tName = string(T)
-		f = open(Config["cacheFolder"] * tName * ".jl", "w+")
-		# type definitions
+		tmpNames = string.(fieldnames(T))
+		tmpNamesU= uppercasefirst.(tmpNames)
+		tmpTypes = string.(T.types)
+	f = open(Config["cacheFolder"] * tName * ".jl", "w+")
+	# module header
+		write(f, "module Table$(tName)\n")
+		write(f, "using Mmap; import Mmap:mmap\n\n")
+	# copy config
+		write(f, "Config = Dict{String,Any}(\"dataFolder\" => \"$(Config["dataFolder"])\")\n")
+		write(f, "openedFiles = Dict{Symbol, IOStream}()\n")
+		write(f, "\n")
+	# copy structure
+		write(f, "mutable struct $(tName)ReadOnly\n")
+		s = ""
+		for i in 1:length(tmpTypes)
+			s *= "\t$(tmpNames[i])::$(tmpTypes[i])\n"
+		end
+		s *= "end\n"
+		write(f, s)
+		s = ""
+	# type definitions
 		write(f, "$(tName)Dict = Dict{Symbol, Base.RefValue}()\n")
-		write(f, "$(tName)ReadOnly = $(tName)\n")
 		write(f, "_syms  = fieldnames($(tName)ReadOnly)\n")
 		write(f, "_types = Vector{DataType}(collect($(tName)ReadOnly.types))\n")
 		write(f, "@assert all(isprimitivetype.(_types))\n")
 		write(f, "\n")
-		# basic functions
-		write(f, """function Create!(dataFolder::String=Config["dataFolder"], numRows::Int=Config["dataLength"])::Nothing
+	# basic functions
+		write(f, """function Create!(numRows::Int)::Nothing
 				# check params
+				dataFolder = Config["dataFolder"]
 				dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
 				isdir(dataFolder) || mkdir(dataFolder)
 				for i in 1:length(_types)
 					f = open(dataFolder*string(_syms[i])*".bin", "w+")
 					openedFiles[_syms[i]] = f
-					$(tName)[_syms[i]] = Ref(mmap(
+					$(tName)Dict[_syms[i]] = Ref(mmap(
 						f, Vector{_types[i]}, numRows; grow=true, shared=false
 						))
 				end
 				write(dataFolder*"_num_rows", string(numRows))
 				return nothing
 				end
-			function Open(dataFolder::String=Config["dataFolder"], numRows::Int=Config["dataLength"])::Nothing
+			function Open(numRows::Int)::Nothing
+				dataFolder = Config["dataFolder"]
 				# check params
 				dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
 				isdir(dataFolder) || mkdir(dataFolder)
 				for i in 1:length(_types)
 					f = open(dataFolder*string(_syms[i])*".bin", "r+")
 					openedFiles[_syms[i]] = f
-					$(tName)[_syms[i]] = Ref(mmap(
+					$(tName)Dict[_syms[i]] = Ref(mmap(
 						f, Vector{_types[i]}, numRows; grow=false, shared=false
 						))
 				end
@@ -66,13 +91,10 @@ module MmapDB
 				end
 
 			""")
-		# restore structure
+	# restore structure
 		s = "
 			function GetRow(i)::$(tName)ReadOnly
 				$(tName)ReadOnly("
-		tmpNames = string.(fieldnames(T))
-		tmpNamesU= uppercasefirst.(tmpNames)
-		tmpTypes = string.(T.types)
 		for i in 1:length(T.types)
 			s *= "
 					$(tName)Dict[:$(tmpNames[i])][][i],"
@@ -81,7 +103,7 @@ module MmapDB
 					)
 				end"
 		write(f, s)
-		# extensive
+	# extensive
 		s = ""
 		for i in 1:length(T.types)
 			s *= "
@@ -100,15 +122,27 @@ module MmapDB
 			"
 		end
 		write(f, s)
-		close(f)
-		Main.include(Config["cacheFolder"] * tName * ".jl")
-		rm(Config["cacheFolder"] * tName * ".jl")
-		return nothing
-		end
+	# module end
+		write(f, "\nend\n\n")
+	close(f)
+	@info "Loading module Table$(tName)"
+	return Main.include(Config["cacheFolder"] * tName * ".jl")
+	end
 
+function Init(dataFolder::String, cacheFolder::String="/tmp/")::Bool
+	dataFolder[end] !== '/' ? dataFolder *= "/" : nothing
+	cacheFolder[end] !== '/' ? cacheFolder *= "/" : nothing
+	isdir(dataFolder) || mkdir(dataFolder)
+	isdir(cacheFolder) || mkdir(cacheFolder)
+	Config["isInitiated"] = true
+	Config["dataFolder"]  = dataFolder
+	Config["cacheFolder"] = cacheFolder
+	return true
+	end
 
-
-
+function IsInitiated()::Bool
+	return Config["isInitiated"]
+	end
 
 
 
