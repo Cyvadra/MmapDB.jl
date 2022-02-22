@@ -25,7 +25,7 @@ function GenerateCode(T::DataType)
 		write(f, "module Table$(tName)\n")
 		write(f, "using Mmap; import Mmap:mmap\n\n")
 	# copy config
-		write(f, "Config = Dict{String,Any}(\"dataFolder\" => \"$(Config["dataFolder"])\")\n")
+		write(f, "Config = Dict{String,Any}(\"dataFolder\" => \"$(Config["dataFolder"]*tName*"/")\")\n")
 		write(f, "openedFiles = Dict{Symbol, IOStream}()\n")
 		write(f, "\n")
 	# copy structure
