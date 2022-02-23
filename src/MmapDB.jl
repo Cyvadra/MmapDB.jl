@@ -21,14 +21,12 @@ function GenerateCode(T::DataType)::Module
 		tmpNamesU= uppercasefirst.(tmpNames)
 		tmpTypes = string.(T.types)
 	f = open(Config["cacheFolder"] * tName * ".jl", "w+")
-	# module header
-		write(f, "module Table$(tName)\n")
-		write(f, "using Mmap; import Mmap:mmap\n\n")
-	# copy config
-		write(f, "Config = Dict{String,Any}(\"dataFolder\" => \"$(Config["dataFolder"]*tName*"/")\")\n")
-		write(f, "openedFiles = Dict{Symbol, IOStream}()\n")
-		write(f, "\n")
-	# copy structure
+	# header
+	s = read("./tpl.header.jl", String)
+	s = replace(s, "__tName__" => tName)
+	s = replace(s, "__ConfigDataFolder__" => Config["dataFolder"])
+	write(f, s)
+	# generate structure
 		write(f, "mutable struct $(tName)ReadOnly\n")
 		s = ""
 		for i in 1:length(tmpTypes)
@@ -37,61 +35,12 @@ function GenerateCode(T::DataType)::Module
 		s *= "end\n"
 		write(f, s)
 		s = ""
-	# type definitions
-		write(f, "$(tName)Dict = Dict{Symbol, Base.RefValue}()\n")
-		write(f, "_syms  = fieldnames($(tName)ReadOnly)\n")
-		write(f, "_types = Vector{DataType}(collect($(tName)ReadOnly.types))\n")
-		write(f, "@assert all(isprimitivetype.(_types))\n")
-		write(f, "\n")
-	# basic functions
-		write(f, """function Create!(numRows::Int)::Nothing
-				# check params
-				dataFolder = Config["dataFolder"]
-				dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
-				isdir(dataFolder) || mkdir(dataFolder)
-				for i in 1:length(_types)
-					f = open(dataFolder*string(_syms[i])*".bin", "w+")
-					openedFiles[_syms[i]] = f
-					$(tName)Dict[_syms[i]] = Ref(mmap(
-						f, Vector{_types[i]}, numRows; grow=true, shared=true
-						))
-				end
-				write(dataFolder*"_num_rows", string(numRows))
-				return nothing
-				end
-			function Open(numRows::Int)::Nothing
-				dataFolder = Config["dataFolder"]
-				# check params
-				dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
-				isdir(dataFolder) || mkdir(dataFolder)
-				for i in 1:length(_types)
-					f = open(dataFolder*string(_syms[i])*".bin", "r+")
-					openedFiles[_syms[i]] = f
-					$(tName)Dict[_syms[i]] = Ref(mmap(
-						f, Vector{_types[i]}, numRows; grow=false, shared=true
-						))
-				end
-				write(dataFolder*"_num_rows", string(numRows))
-				return nothing
-				end
-
-			function GetField(sym::Symbol, i)
-				return $(tName)[sym][][i]
-				end
-			function GetField(sym::Symbol, ids::Vector)::Vector
-				return $(tName)[sym][][ids]
-				end
-			function SetField(sym::Symbol, i, v)::Nothing
-				$(tName)[sym][][i] = v
-				return nothing
-				end
-			function SetFieldDiff(sym::Symbol, i, v)::Nothing
-				$(tName)[sym][][i] += v
-				return nothing
-				end
-
-			""")
-	# restore structure
+	# body
+	s = read("./tpl.body.jl", String)
+	s = replace(s, "__tName__" => tName)
+	s = replace(s, "__ConfigDataFolder__" => Config["dataFolder"])
+	write(f, s)
+	# get function
 		s = "
 			function GetRow(i)::$(tName)ReadOnly
 				$(tName)ReadOnly("
@@ -103,7 +52,7 @@ function GenerateCode(T::DataType)::Module
 					)
 				end"
 		write(f, s)
-	# extensive
+	# extensive functions
 		s = ""
 		for i in 1:length(T.types)
 			s *= "
