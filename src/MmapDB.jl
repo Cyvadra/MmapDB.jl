@@ -11,7 +11,7 @@ Config = Dict{String,Any}(
 		"cacheFolder" => "/tmp/",
 	)
 
-function GenerateCode(T::DataType)
+function GenerateCode(T::DataType)::Module
 	if !IsInitiated()
 		throw("Init data folder first!")
 	end
@@ -53,7 +53,7 @@ function GenerateCode(T::DataType)
 					f = open(dataFolder*string(_syms[i])*".bin", "w+")
 					openedFiles[_syms[i]] = f
 					$(tName)Dict[_syms[i]] = Ref(mmap(
-						f, Vector{_types[i]}, numRows; grow=true, shared=false
+						f, Vector{_types[i]}, numRows; grow=true, shared=true
 						))
 				end
 				write(dataFolder*"_num_rows", string(numRows))
@@ -68,7 +68,7 @@ function GenerateCode(T::DataType)
 					f = open(dataFolder*string(_syms[i])*".bin", "r+")
 					openedFiles[_syms[i]] = f
 					$(tName)Dict[_syms[i]] = Ref(mmap(
-						f, Vector{_types[i]}, numRows; grow=false, shared=false
+						f, Vector{_types[i]}, numRows; grow=false, shared=true
 						))
 				end
 				write(dataFolder*"_num_rows", string(numRows))
