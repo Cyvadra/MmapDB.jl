@@ -21,12 +21,12 @@ function GenerateCode(T::DataType)::Module
 		tmpNames = string.(fieldnames(T))
 		tmpNamesU= uppercasefirst.(tmpNames)
 		tmpTypes = string.(T.types)
-	f = open(Config["cacheFolder"] * tName * ".jl", "w+")
+		f = open(Config["cacheFolder"] * tName * ".jl", "w+")
 	# header
-	s = read("$MOD_PATH/tpl.header.jl", String)
-	s = replace(s, "__tName__" => tName)
-	s = replace(s, "__ConfigDataFolder__" => Config["dataFolder"])
-	write(f, s)
+		s = read("$MOD_PATH/tpl.header.jl", String)
+		s = replace(s, "__tName__" => tName)
+		s = replace(s, "__ConfigDataFolder__" => Config["dataFolder"])
+		write(f, s)
 	# generate structure
 		write(f, "mutable struct $(tName)ReadOnly\n")
 		s = ""
@@ -37,11 +37,11 @@ function GenerateCode(T::DataType)::Module
 		write(f, s)
 		s = ""
 	# body
-	s = read("$MOD_PATH/tpl.body.jl", String)
-	s = replace(s, "__tName__" => tName)
-	s = replace(s, "__ConfigDataFolder__" => Config["dataFolder"])
-	write(f, s)
-	# get function
+		s = read("$MOD_PATH/tpl.body.jl", String)
+		s = replace(s, "__tName__" => tName)
+		s = replace(s, "__ConfigDataFolder__" => Config["dataFolder"])
+		write(f, s)
+	# GetRow
 		s = "
 			function GetRow(i)::$(tName)ReadOnly
 				$(tName)ReadOnly("
@@ -51,6 +51,17 @@ function GenerateCode(T::DataType)::Module
 		end
 		s *= "
 					)
+				end"
+		write(f, s)
+	# SetRow
+		s = "
+			function SetRow(i,v)::Nothing"
+		for i in 1:length(tmpNames)
+			s *= "
+				$(tName)Dict[:$(tmpNames[i])][][i] = v.$(tmpNames[i])"
+		end
+		s *= "
+				return nothing
 				end"
 		write(f, s)
 	# extensive functions
@@ -75,6 +86,7 @@ function GenerateCode(T::DataType)::Module
 	# module end
 		write(f, "\nend\n\n")
 	close(f)
+	@info "File written as " * Config["cacheFolder"] * tName * ".jl"
 	@info "Loading module Table$(tName)"
 	return Main.include(Config["cacheFolder"] * tName * ".jl")
 	end
