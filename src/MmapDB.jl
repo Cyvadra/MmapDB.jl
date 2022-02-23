@@ -10,6 +10,7 @@ Config = Dict{String,Any}(
 	# where generated files are writed into
 		"cacheFolder" => "/tmp/",
 	)
+MOD_PATH = replace("$(@__FILE__)", "/src/MmapDB.jl"=>"/src")
 
 function GenerateCode(T::DataType)::Module
 	if !IsInitiated()
@@ -22,7 +23,7 @@ function GenerateCode(T::DataType)::Module
 		tmpTypes = string.(T.types)
 	f = open(Config["cacheFolder"] * tName * ".jl", "w+")
 	# header
-	s = read("./tpl.header.jl", String)
+	s = read("$MOD_PATH/tpl.header.jl", String)
 	s = replace(s, "__tName__" => tName)
 	s = replace(s, "__ConfigDataFolder__" => Config["dataFolder"])
 	write(f, s)
@@ -36,7 +37,7 @@ function GenerateCode(T::DataType)::Module
 		write(f, s)
 		s = ""
 	# body
-	s = read("./tpl.body.jl", String)
+	s = read("$MOD_PATH/tpl.body.jl", String)
 	s = replace(s, "__tName__" => tName)
 	s = replace(s, "__ConfigDataFolder__" => Config["dataFolder"])
 	write(f, s)

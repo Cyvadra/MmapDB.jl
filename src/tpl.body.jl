@@ -6,7 +6,7 @@ _types = Vector{DataType}(collect(__tName__ReadOnly.types))
 
 	function Create!(numRows::Int)::Nothing
 		# check params
-		dataFolder = __ConfigDataFolder__
+		dataFolder = "__ConfigDataFolder__"
 		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
 		isdir(dataFolder) || mkdir(dataFolder)
 		for i in 1:length(_types)
@@ -20,7 +20,7 @@ _types = Vector{DataType}(collect(__tName__ReadOnly.types))
 		return nothing
 		end
 	function Open(numRows::Int)::Nothing
-		dataFolder = __ConfigDataFolder__
+		dataFolder = "__ConfigDataFolder__"
 		# check params
 		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
 		isdir(dataFolder) || mkdir(dataFolder)
