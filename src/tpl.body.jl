@@ -45,9 +45,6 @@ _types = Vector{DataType}(collect(__tName__ReadOnly.types))
 		end
 		return nothing
 		end
-		write(dataFolder*"_num_rows", string(numRows))
-		return nothing
-		end
 	function SaveJLD(dataFolder::String="__ConfigDataFolder__")::Nothing
 		# check params
 		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
