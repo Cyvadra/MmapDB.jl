@@ -68,7 +68,7 @@ function GenerateCode(T::DataType)::Module
 	# SetRow #2
 		s = "
 			function SetRow(i, "
-		s = s * join(tmpNamesL[i], ", ")
+		s = s * join(tmpNamesL, ", ")
 		s = s * ")::Nothing"
 		for i in 1:length(tmpNames)
 			s *= "
