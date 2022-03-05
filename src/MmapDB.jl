@@ -20,6 +20,7 @@ function GenerateCode(T::DataType)::Module
 		tName = string(T)
 		tmpNames = string.(fieldnames(T))
 		tmpNamesU= uppercasefirst.(tmpNames)
+		tmpNamesL= lowercasefirst.(tmpNames)
 		tmpTypes = string.(T.types)
 		f = open(Config["cacheFolder"] * tName * ".jl", "w+")
 	# header
@@ -59,6 +60,19 @@ function GenerateCode(T::DataType)::Module
 		for i in 1:length(tmpNames)
 			s *= "
 				$(tName)Dict[:$(tmpNames[i])][i] = v.$(tmpNames[i])"
+		end
+		s *= "
+				return nothing
+				end"
+		write(f, s)
+	# SetRow #2
+		s = "
+			function SetRow(i, "
+		s = s * join(tmpNamesL[i], ", ")
+		s = s * ")::Nothing"
+		for i in 1:length(tmpNames)
+			s *= "
+				$(tName)Dict[:$(tmpNames[i])][i] = $(tmpNamesL[i])"
 		end
 		s *= "
 				return nothing
