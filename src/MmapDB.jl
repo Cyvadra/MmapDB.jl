@@ -47,7 +47,7 @@ function GenerateCode(T::DataType)::Module
 				$(tName)ReadOnly("
 		for i in 1:length(T.types)
 			s *= "
-					$(tName)Dict[:$(tmpNames[i])][][i],"
+					$(tName)Dict[:$(tmpNames[i])][i],"
 		end
 		s *= "
 					)
@@ -58,7 +58,7 @@ function GenerateCode(T::DataType)::Module
 			function SetRow(i,v)::Nothing"
 		for i in 1:length(tmpNames)
 			s *= "
-				$(tName)Dict[:$(tmpNames[i])][][i] = v.$(tmpNames[i])"
+				$(tName)Dict[:$(tmpNames[i])][i] = v.$(tmpNames[i])"
 		end
 		s *= "
 				return nothing
@@ -70,14 +70,14 @@ function GenerateCode(T::DataType)::Module
 			s *= "
 
 			function GetField$(tmpNamesU[i])(i)::$(tmpTypes[i])
-				return $(tName)Dict[:$(tmpNames[i])][][i]
+				return $(tName)Dict[:$(tmpNames[i])][i]
 				end
 			function SetField$(tmpNamesU[i])(i, v)::Nothing
-				$(tName)Dict[:$(tmpNames[i])][][i] = v
+				$(tName)Dict[:$(tmpNames[i])][i] = v
 				return nothing
 				end
 			function SetFieldDiff$(tmpNamesU[i])(i, v)::Nothing
-				$(tName)Dict[:$(tmpNames[i])][][i] += v
+				$(tName)Dict[:$(tmpNames[i])][i] += v
 				return nothing
 				end
 			"
