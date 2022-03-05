@@ -39,12 +39,10 @@ _types = Vector{DataType}(collect(__tName__ReadOnly.types))
 # Memory logic
 	function CreateMem(numRows::Int)::Nothing
 		# check params
-		@info "allocating memory..."
-		@showprogress for i in 1:length(_types)
+		for i in 1:length(_types)
 			haskey(openedFiles, _syms[i]) && close(openedFiles[_syms[i]])
 			__tName__Dict[_syms[i]] = zeros(_types[i], numRows)
 		end
-		@info "done!"
 		return nothing
 		end
 		write(dataFolder*"_num_rows", string(numRows))
@@ -55,27 +53,23 @@ _types = Vector{DataType}(collect(__tName__ReadOnly.types))
 		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
 		isdir(dataFolder) || mkdir(dataFolder)
 		numRows = length(__tName__Dict[_syms[1]])
-		@info "writing jld2 file..."
-		@showprogress for i in 1:length(_syms)
+		for i in 1:length(_syms)
 			JLD2.save(
 				dataFolder * string(_syms[i]) * ".jld2",
 				string(_syms[i]),
 				__tName__Dict[_syms[i]]
 			)
 		end
-		@info "done!"
 		return nothing
 		end
 	function OpenJLD(dataFolder::String="__ConfigDataFolder__")::Nothing
 		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
 		isdir(dataFolder) || mkdir(dataFolder)
-		@info "loading jld2 file into memory..."
-		@showprogress for i in 1:length(_syms)
+		for i in 1:length(_syms)
 			__tName__Dict[_syms[i]] = JLD2.load(
 				dataFolder * string(_syms[i]) * ".jld2",
 			)[string(_syms[i])]
 		end
-		@info "done!"
 		return nothing
 		end
 
