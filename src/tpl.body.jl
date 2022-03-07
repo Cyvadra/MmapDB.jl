@@ -91,16 +91,26 @@ _types = Vector{DataType}(collect(__tName__ReadOnly.types))
 
 
 	function GetField(sym::Symbol, i)
-		return __tName__[sym][i]
+		return __tName__Dict[sym][i]
 		end
 	function GetField(sym::Symbol, ids::Vector)::Vector
-		return __tName__[sym][ids]
+		return __tName__Dict[sym][ids]
 		end
 	function SetField(sym::Symbol, i, v)::Nothing
-		__tName__[sym][i] = v
+		__tName__Dict[sym][i] = v
 		return nothing
 		end
 	function SetFieldDiff(sym::Symbol, i, v)::Nothing
-		__tName__[sym][i] += v
+		__tName__Dict[sym][i] += v
 		return nothing
 		end
+
+	function mapFunctionOnFieldIds(f::Function, sym::Symbol, ids)::Vector
+		return map(f, __tName__Dict[sym][ids])
+		end
+
+
+
+
+
+
