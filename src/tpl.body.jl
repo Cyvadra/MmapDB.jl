@@ -61,6 +61,31 @@ _types = Vector{DataType}(collect(__tName__ReadOnly.types))
 		end
 		return nothing
 		end
+	function SaveCopy(dataFolder::String="__ConfigDataFolder___copy/")::Nothing # when Open(shared=false)
+		# check params
+		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
+		isdir(dataFolder) || mkdir(dataFolder)
+		numRows = length(__tName__Dict[_syms[1]])
+		if filesize(dataFolder*"_num_rows") > 0
+			@warn "file already exist! $dataFolder"
+			@warn "press y and enter for confirmation"
+			s = readline()
+			if uppercase(s)[1] !== 'Y'
+				@info "cancelled"
+				return nothing
+			end
+		end
+		write(dataFolder*"_num_rows", string(numRows))
+		for i in 1:length(_syms)
+			path = dataFolder * string(_syms[i]) * ".bin"
+			f = open(path, "w")
+			m = mmap(f, Vector{_types[i]}, numRows; grow=true, shared=true)
+			m .= __tName__Dict[_syms[i]]
+			fz = Float16(filesize(path) / 1024^3)
+			@info "written $(fz)GB to $path"
+		end
+		return nothing
+		end		
 	function SaveJLD(dataFolder::String="__ConfigDataFolder__")::Nothing
 		# check params
 		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
