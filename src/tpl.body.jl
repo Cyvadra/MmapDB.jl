@@ -20,19 +20,19 @@ _types = Vector{DataType}(collect(__tName__ReadOnly.types))
 		write(dataFolder*"_num_rows", string(numRows))
 		return nothing
 		end
-	function Open(numRows::Int)::Nothing
+	function Open(shared::Bool=true)::Nothing
 		dataFolder = "__ConfigDataFolder__"
 		# check params
 		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
 		isdir(dataFolder) || mkdir(dataFolder)
+		numRows = parse(Int, read(dataFolder*"_num_rows",String))
 		for i in 1:length(_types)
 			f = open(dataFolder*string(_syms[i])*".bin", "r+")
 			openedFiles[_syms[i]] = f
 			__tName__Dict[_syms[i]] = mmap(
-				f, Vector{_types[i]}, numRows; grow=false, shared=true
+				f, Vector{_types[i]}, numRows; grow=false, shared=shared
 				)
 		end
-		write(dataFolder*"_num_rows", string(numRows))
 		return nothing
 		end
 
@@ -57,6 +57,7 @@ _types = Vector{DataType}(collect(__tName__ReadOnly.types))
 				__tName__Dict[_syms[i]]
 			)
 		end
+		write(dataFolder*"_num_rows", string(numRows))
 		return nothing
 		end
 	function OpenJLD(dataFolder::String="__ConfigDataFolder__")::Nothing
