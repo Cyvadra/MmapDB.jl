@@ -90,6 +90,9 @@ function GenerateCode(T::DataType)::Module
 				$(tName)Dict[:$(tmpNames[i])][i] = v
 				return nothing
 				end
+			function GetField$(tmpNamesU[i])(ids::Vector)::Vector{$(tmpTypes[i])}
+				return $(tName)Dict[:$(tmpNames[i])][ids]
+				end
 			function SetFieldDiff$(tmpNamesU[i])(i, v)::Nothing
 				$(tName)Dict[:$(tmpNames[i])][i] += v
 				return nothing
