@@ -1,7 +1,7 @@
 name = "MmapDB"
 uuid = "321a6536-5504-4c43-9867-450ba10381bc"
 authors = ["jason89757 <dj@lifesdk.com>"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
