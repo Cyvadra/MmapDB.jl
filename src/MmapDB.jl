@@ -83,15 +83,15 @@ function GenerateCode(T::DataType)::Module
 		for i in 1:length(T.types)
 			s *= "
 
-			function GetField$(tmpNamesU[i])(i)::$(tmpTypes[i])
+			function GetField$(tmpNamesU[i])(i::Integer)::$(tmpTypes[i])
 				return $(tName)Dict[:$(tmpNames[i])][i]
+				end
+			function GetField$(tmpNamesU[i])(ids) # ::Vector{$(tmpTypes[i])}
+				return $(tName)Dict[:$(tmpNames[i])][ids]
 				end
 			function SetField$(tmpNamesU[i])(i, v)::Nothing
 				$(tName)Dict[:$(tmpNames[i])][i] = v
 				return nothing
-				end
-			function GetField$(tmpNamesU[i])(ids::Vector)::Vector{$(tmpTypes[i])}
-				return $(tName)Dict[:$(tmpNames[i])][ids]
 				end
 			function SetFieldDiff$(tmpNamesU[i])(i, v)::Nothing
 				$(tName)Dict[:$(tmpNames[i])][i] += v
