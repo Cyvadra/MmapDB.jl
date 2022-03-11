@@ -56,10 +56,7 @@ function GenerateCode(T::DataType)::Module
 		write(f, s)
 	# SetRow
 		s = "
-			function SetRow(i,v)::Nothing
-				if i > Config[\"lastNewID\"]
-					Config[\"lastNewID\"] = i
-				end"
+			function SetRow(i,v)::Nothing"
 		for i in 1:length(tmpNames)
 			s *= "
 				$(tName)Dict[:$(tmpNames[i])][i] = v.$(tmpNames[i])"
@@ -71,6 +68,33 @@ function GenerateCode(T::DataType)::Module
 	# SetRow #2
 		s = "
 			function SetRow(i, "
+		s = s * join(tmpNamesL, ", ")
+		s = s * ")::Nothing"
+		for i in 1:length(tmpNames)
+			s *= "
+				$(tName)Dict[:$(tmpNames[i])][i] = $(tmpNamesL[i])"
+		end
+		s *= "
+				return nothing
+				end"
+		write(f, s)
+	# InsertRow
+		s = "
+			function InsertRow(i,v)::Nothing
+				if i > Config[\"lastNewID\"]
+					Config[\"lastNewID\"] = i
+				end"
+		for i in 1:length(tmpNames)
+			s *= "
+				$(tName)Dict[:$(tmpNames[i])][i] = v.$(tmpNames[i])"
+		end
+		s *= "
+				return nothing
+				end"
+		write(f, s)
+	# InsertRow #2
+		s = "
+			function InsertRow(i, "
 		s = s * join(tmpNamesL, ", ")
 		s = s * ")::Nothing
 				if i > Config[\"lastNewID\"]
