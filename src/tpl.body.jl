@@ -130,6 +130,13 @@ _types = Vector{DataType}(collect(__tName__ReadOnly.types))
 		return nothing
 		end
 
+
+	function FunctionOnField(f::Function, sym::Symbol)::Vector
+		return f(__tName__Dict[sym])
+		end
+	function mapFunctionOnField(f::Function, sym::Symbol)::Vector
+		return map(f, __tName__Dict[sym])
+		end
 	function mapFunctionOnFieldIds(f::Function, sym::Symbol, ids)::Vector
 		return map(f, __tName__Dict[sym][ids])
 		end
@@ -137,11 +144,11 @@ _types = Vector{DataType}(collect(__tName__ReadOnly.types))
 	function Findfirst(f, sym::Symbol)
 		return findfirst(f, __tName__Dict[sym])
 		end
-
 	function Findlast(f, sym::Symbol)
 		return findlast(f, __tName__Dict[sym])
 		end
-
-
+	function Findnext(f, sym::Symbol, n::Int)
+		return findnext(f, __tName__Dict[sym], n)
+		end
 
 
