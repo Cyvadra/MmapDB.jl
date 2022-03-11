@@ -134,7 +134,13 @@ _types = Vector{DataType}(collect(__tName__ReadOnly.types))
 		return map(f, __tName__Dict[sym][ids])
 		end
 
+	function Findfirst(f, sym::Symbol)
+		return findfirst(f, __tName__Dict[sym])
+		end
 
+	function Findlast(f, sym::Symbol)
+		return findlast(f, __tName__Dict[sym])
+		end
 
 
 
