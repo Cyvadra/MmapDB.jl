@@ -45,8 +45,8 @@ function GenerateCode(T::DataType)::Module
 		write(f, s)
 	# GetRow
 		s = "
-			function GetRow(i::Integer)::$(tName)
-				$(tName)("
+			function GetRow(i::Integer)::Main.$(tName)
+				Main.$(tName)("
 		for i in 1:length(T.types)
 			s *= "
 					$(tName)Dict[:$(tmpNames[i])][i],"
@@ -57,7 +57,7 @@ function GenerateCode(T::DataType)::Module
 		write(f, s)
 	# GetRow batch
 		s = "
-			function GetRow(v::Vector)::Vector{$(tName)}
+			function GetRow(v::Vector)::Vector{Main.$(tName)}
 				return GetRow.(v)
 				end"
 		write(f, s)
