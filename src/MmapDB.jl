@@ -27,8 +27,8 @@ function GenerateCode(T::DataType)::Module
 		s = "import Base:+,-\n"
 		s *= "function +(a::Main.$tName, b::Main.$tName)::Main.$tName
 			Main.$tName("
-		for i in 1:length(tmpTypes)
-			s *= "a.$(tmpNames[i]) + b.$(tmpTypes[i]), "
+		for i in 1:length(tmpNames)
+			s *= "a.$(tmpNames[i]) + b.$(tmpNames[i]), "
 		end
 		s = s[1:end-2]
 		s *= ")
@@ -36,8 +36,8 @@ function GenerateCode(T::DataType)::Module
 		"
 		s *= "function -(a::Main.$tName, b::Main.$tName)::Main.$tName
 			Main.$tName("
-		for i in 1:length(tmpTypes)
-			s *= "a.$(tmpNames[i]) - b.$(tmpTypes[i]), "
+		for i in 1:length(tmpNames)
+			s *= "a.$(tmpNames[i]) - b.$(tmpNames[i]), "
 		end
 		s = s[1:end-2]
 		s *= ")
