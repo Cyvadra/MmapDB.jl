@@ -29,12 +29,13 @@ function GenerateCode(T::DataType)::Module
 		s = replace(s, "__ConfigDataFolder__" => Config["dataFolder"])
 		write(f, s)
 	# generate structure
-		write(f, "mutable struct $(tName)ReadOnly\n")
+		write(f, "\nmutable struct $(tName)\n")
 		s = ""
 		for i in 1:length(tmpTypes)
 			s *= "\t$(tmpNames[i])::$(tmpTypes[i])\n"
 		end
 		s *= "end\n"
+		s *= "export $tName\n\n"
 		write(f, s)
 		s = ""
 	# body
@@ -44,8 +45,8 @@ function GenerateCode(T::DataType)::Module
 		write(f, s)
 	# GetRow
 		s = "
-			function GetRow(i::Integer)::$(tName)ReadOnly
-				$(tName)ReadOnly("
+			function GetRow(i::Integer)::$(tName)
+				$(tName)("
 		for i in 1:length(T.types)
 			s *= "
 					$(tName)Dict[:$(tmpNames[i])][i],"
@@ -56,7 +57,7 @@ function GenerateCode(T::DataType)::Module
 		write(f, s)
 	# GetRow batch
 		s = "
-			function GetRow(v::Vector)::Vector{$(tName)ReadOnly}
+			function GetRow(v::Vector)::Vector{$(tName)}
 				return GetRow.(v)
 				end"
 		write(f, s)

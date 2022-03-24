@@ -1,7 +1,7 @@
 
 __tName__Dict = Dict{Symbol, Any}()
-_syms  = fieldnames(__tName__ReadOnly)
-_types = Vector{DataType}(collect(__tName__ReadOnly.types))
+_syms  = fieldnames(__tName__)
+_types = Vector{DataType}(collect(__tName__.types))
 @assert all(isprimitivetype.(_types))
 
 # Mmap logic
