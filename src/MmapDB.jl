@@ -23,6 +23,27 @@ function GenerateCode(T::DataType)::Module
 		tmpNamesL= lowercasefirst.(tmpNames)
 		tmpTypes = string.(T.types)
 		f = open(Config["cacheFolder"] * tName * ".jl", "w+")
+	# implementations in Main
+		s = "import Base:+,-\n"
+		s *= "function +(a::Main.$tName, b::Main.$tName)::Main.$tName
+			Main.$tName("
+		for i in 1:length(tmpTypes)
+			s *= "a.$(tmpNames[i]) + b.$(tmpTypes[i]), "
+		end
+		s = s[1:end-2]
+		s *= ")
+			end
+		"
+		s *= "function -(a::Main.$tName, b::Main.$tName)::Main.$tName
+			Main.$tName("
+		for i in 1:length(tmpTypes)
+			s *= "a.$(tmpNames[i]) - b.$(tmpTypes[i]), "
+		end
+		s = s[1:end-2]
+		s *= ")
+			end
+		"
+		write(f, s)
 	# header
 		s = read("$MOD_PATH/tpl.header.jl", String)
 		s = replace(s, "__tName__" => tName)
