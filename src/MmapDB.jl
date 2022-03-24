@@ -44,7 +44,7 @@ function GenerateCode(T::DataType)::Module
 		write(f, s)
 	# GetRow
 		s = "
-			function GetRow(i)::$(tName)ReadOnly
+			function GetRow(i::Integer)::$(tName)ReadOnly
 				$(tName)ReadOnly("
 		for i in 1:length(T.types)
 			s *= "
@@ -52,6 +52,12 @@ function GenerateCode(T::DataType)::Module
 		end
 		s *= "
 					)
+				end"
+		write(f, s)
+	# GetRow batch
+		s = "
+			function GetRow(v::Vector)::Vector{$(tName)ReadOnly}
+				return GetRow.(v)
 				end"
 		write(f, s)
 	# SetRow
