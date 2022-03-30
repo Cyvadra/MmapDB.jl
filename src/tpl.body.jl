@@ -30,7 +30,7 @@ _types = Vector{DataType}(collect(__tName__.types))
 			f = open(dataFolder*string(_syms[i])*".bin", "r+")
 			openedFiles[_syms[i]] = f
 			__tName__Dict[_syms[i]] = mmap(
-				f, Vector{_types[i]}, numRows; grow=false, shared=shared
+				f, Vector{_types[i]}, numRows; grow=true, shared=shared
 				)
 		end
 		return nothing
