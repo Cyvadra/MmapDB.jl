@@ -35,6 +35,12 @@ _types = Vector{DataType}(collect(__tName__.types))
 		end
 		return nothing
 		end
+	function Close()::Nothing
+		close.( values(openedFiles) |> collect )
+		empty!(__tName__Dict)
+		Config["lastNewID"] = 0
+		return nothing
+		end
 
 # Memory logic
 	function CreateMem(numRows::Int)::Nothing
