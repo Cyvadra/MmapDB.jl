@@ -80,6 +80,9 @@ function GenerateCode(T::DataType)::Module
 		s = "
 			function GetRow(v::Vector)::Vector{Main.$(tName)}
 				return GetRow.(v)
+				end
+			function GetRow(v::UnitRange)::Vector{Main.$(tName)}
+				return GetRow.(collect(v))
 				end"
 		write(f, s)
 	# SetRow
