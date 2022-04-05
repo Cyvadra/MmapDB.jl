@@ -59,7 +59,7 @@ _types = Vector{DataType}(collect(__tName__.types))
 		write(dataFolder*"_num_rows", string(numRows))
 		for i in 1:length(_syms)
 			path = dataFolder * string(_syms[i]) * ".bin"
-			f = open(path, "w")
+			f = open(path, "w+")
 			m = mmap(f, Vector{_types[i]}, numRows; grow=true, shared=true)
 			m .= __tName__Dict[_syms[i]]
 			fz = Float16(filesize(path) / 1024^3)
@@ -84,7 +84,7 @@ _types = Vector{DataType}(collect(__tName__.types))
 		write(dataFolder*"_num_rows", string(numRows))
 		for i in 1:length(_syms)
 			path = dataFolder * string(_syms[i]) * ".bin"
-			f = open(path, "w")
+			f = open(path, "w+")
 			m = mmap(f, Vector{_types[i]}, numRows; grow=true, shared=true)
 			m .= __tName__Dict[_syms[i]]
 			fz = Float16(filesize(path) / 1024^3)
