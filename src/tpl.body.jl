@@ -33,6 +33,7 @@ _types = Vector{DataType}(collect(__tName__.types))
 				f, Vector{_types[i]}, numRows; grow=true, shared=shared
 				)
 		end
+		alignAI()
 		return nothing
 		end
 	function Close()::Nothing
@@ -115,7 +116,22 @@ _types = Vector{DataType}(collect(__tName__.types))
 				dataFolder * string(_syms[i]) * ".jld2",
 			)[string(_syms[i])]
 		end
+		alignAI()
 		return nothing
+		end
+	function alignAI()
+		assumeI = findlast(x->!iszero(x), __tName__Dict[_syms[1]])
+		if all(iszero.(
+				map(s->__tName__Dict[s][assumeI+1], _syms)
+			))
+			Config["lastNewID"] = assumeI
+		else
+			assumeI = findlast(x->!iszero(x), __tName__Dict[_syms[end]])
+			@assert all(iszero.(
+				map(s->__tName__Dict[s][assumeI+1], _syms)
+			))
+			Config["lastNewID"] = assumeI
+		end
 		end
 
 
