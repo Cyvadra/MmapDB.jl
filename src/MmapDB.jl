@@ -137,6 +137,20 @@ function GenerateCode(T::DataType)::Module
 				return nothing
 				end"
 		write(f, s)
+	# BatchInsert
+		s = "
+			function BatchInsert(v::Vector)::Nothing
+				i = Config[\"lastNewID\"] + 1 : Config[\"lastNewID\"] + length(v)
+				ids = collect(i)
+				Config[\"lastNewID\"] += length(v)"
+		for i in 1:length(tmpNames)
+			s *= "
+				$(tName)Dict[:$(tmpNames[i])][ids] = map(x->x.$(tmpNames[i]), v)"
+		end
+		s *= "
+				return nothing
+				end"
+		write(f, s)
 	# extensive functions
 		s = ""
 		for i in 1:length(T.types)
