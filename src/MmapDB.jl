@@ -22,7 +22,12 @@ function GenerateCode(T::DataType)::Module
 		tmpNamesU= uppercasefirst.(tmpNames)
 		tmpNamesL= lowercasefirst.(tmpNames)
 		tmpTypes = string.(T.types)
-		f = open(Config["cacheFolder"] * tName * ".jl", "w+")
+		tmpFileName = Config["cacheFolder"] * tName * ".jl"
+		if isfile(tmpFileName)
+			rm(tmpFileName)
+		end
+		touch(tmpFileName)
+		f = open(tmpFileName, "w+")
 	# implementations in Main
 		s = "import Base:+,-\n"
 		s *= "function +(a::Main.$tName, b::Main.$tName)::Main.$tName
@@ -176,6 +181,7 @@ function GenerateCode(T::DataType)::Module
 	# module end
 		write(f, "\nend\n\n")
 	close(f)
+	chmod(tmpFileName, 0o777)
 	@info "File written as " * Config["cacheFolder"] * tName * ".jl"
 	@info "Loading module Table$(tName)"
 	return Main.include(Config["cacheFolder"] * tName * ".jl")
