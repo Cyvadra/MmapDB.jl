@@ -22,7 +22,7 @@ function GenerateCode(T::DataType)::Module
 		tmpNamesU= uppercasefirst.(tmpNames)
 		tmpNamesL= lowercasefirst.(tmpNames)
 		tmpTypes = string.(T.types)
-		tmpFileName = Config["cacheFolder"] * tName * ".jl"
+		tmpFileName = Config["cacheFolder"] * tName * "." * bytes2hex(rand(UInt8,3)) * "." * ".jl"
 		if isfile(tmpFileName)
 			rm(tmpFileName)
 		end
