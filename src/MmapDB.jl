@@ -184,7 +184,7 @@ function GenerateCode(T::DataType)::Module
 	chmod(tmpFileName, 0o777)
 	@info "File written as " * Config["cacheFolder"] * tName * ".jl"
 	@info "Loading module Table$(tName)"
-	return Main.include(Config["cacheFolder"] * tName * ".jl")
+	return Main.include(tmpFileName)
 	end
 
 function Init(dataFolder::String, cacheFolder::String="/tmp/")::Bool
