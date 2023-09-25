@@ -1,5 +1,7 @@
 # MmapDB.jl
 
+[![Build Status](https://github.com/Cyvadra/MmapDB.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/Cyvadra/MmapDB.jl/actions/workflows/CI.yml?query=branch%3Amain)
+
 ## Usage
 ```julia
 using MmapDB
