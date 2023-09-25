@@ -6,6 +6,7 @@ version = "0.1.2"
 [deps]
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 Mmap = "a63ad114-7e13-5084-954f-fe012c677804"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 JLD2 = "0.4"
