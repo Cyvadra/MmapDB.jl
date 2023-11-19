@@ -5,6 +5,14 @@ _types = Vector{DataType}(collect(__tName__.types))
 @assert all(isprimitivetype.(_types))
 
 # Mmap logic
+	function UpdateCompatity()::Nothing
+		dataFolder = "__ConfigDataFolder__"
+		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
+		write(dataFolder*"_types",
+			join([ string(_syms[i]) * "," * string(_types[i]) for i in 1:length(_types) ], "\n")
+		)
+		return nothing
+		end
 	function Create!(numRows::Int)::Nothing
 		# check params
 		dataFolder = "__ConfigDataFolder__"
@@ -17,6 +25,7 @@ _types = Vector{DataType}(collect(__tName__.types))
 				f, Vector{_types[i]}, numRows; grow=true, shared=true
 				)
 		end
+		UpdateCompatity()
 		write(dataFolder*"_num_rows", string(numRows))
 		return nothing
 		end
