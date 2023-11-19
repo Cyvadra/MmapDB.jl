@@ -79,7 +79,7 @@ _types = Vector{DataType}(collect(__tName__.types))
 		end
 	function SaveCopy(dataFolder::String="__ConfigDataFolder___copy/")::Nothing # when Open(shared=false)
 		# check params
-		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
+		dataFolder = replace(dataFolder, "/"=>"") * "/"
 		isdir(dataFolder) || mkdir(dataFolder)
 		numRows = length(__tName__Dict[_syms[1]])
 		if filesize(dataFolder*"_num_rows") > 0
