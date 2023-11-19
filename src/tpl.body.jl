@@ -3,21 +3,16 @@ __tName__Dict = Dict{Symbol, Any}()
 _syms  = fieldnames(__tName__)
 _types = Vector{DataType}(collect(__tName__.types))
 @assert all(isprimitivetype.(_types))
+dataFolder = "__ConfigDataFolder__"
 
 # Mmap logic
 	function UpdateCompatity()::Nothing
-		dataFolder = "__ConfigDataFolder__"
-		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
 		write(dataFolder*"_types",
 			join([ string(_syms[i]) * "," * string(_types[i]) for i in 1:length(_types) ], "\n")
 		)
 		return nothing
 		end
 	function Create!(numRows::Int)::Nothing
-		# check params
-		dataFolder = "__ConfigDataFolder__"
-		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
-		isdir(dataFolder) || mkdir(dataFolder)
 		for i in 1:length(_types)
 			f = open(dataFolder*string(_syms[i])*".bin", "w+")
 			openedFiles[_syms[i]] = f
@@ -30,10 +25,6 @@ _types = Vector{DataType}(collect(__tName__.types))
 		return nothing
 		end
 	function Open(shared::Bool=true)::Nothing
-		dataFolder = "__ConfigDataFolder__"
-		# check params
-		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
-		isdir(dataFolder) || mkdir(dataFolder)
 		numRows = parse(Int, read(dataFolder*"_num_rows",String))
 		for i in 1:length(_types)
 			f = open(dataFolder*string(_syms[i])*".bin", "r+")
@@ -54,7 +45,6 @@ _types = Vector{DataType}(collect(__tName__.types))
 
 # Memory logic
 	function CreateMem(numRows::Int)::Nothing
-		# check params
 		for i in 1:length(_types)
 			haskey(openedFiles, _syms[i]) && close(openedFiles[_syms[i]])
 			__tName__Dict[_syms[i]] = zeros(_types[i], numRows)
@@ -62,8 +52,7 @@ _types = Vector{DataType}(collect(__tName__.types))
 		return nothing
 		end
 	function SaveMem(dataFolder::String="__ConfigDataFolder__")::Nothing
-		# check params
-		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
+		dataFolder[end] !== '/' ? dataFolder *= "/" : nothing
 		isdir(dataFolder) || mkdir(dataFolder)
 		numRows = length(__tName__Dict[_syms[1]])
 		write(dataFolder*"_num_rows", string(numRows))
@@ -78,7 +67,6 @@ _types = Vector{DataType}(collect(__tName__.types))
 		return nothing
 		end
 	function SaveCopy(dataFolder::String="__ConfigDataFolder___copy/")::Nothing # when Open(shared=false)
-		# check params
 		dataFolder = replace(dataFolder, "/"=>"") * "/"
 		isdir(dataFolder) || mkdir(dataFolder)
 		numRows = length(__tName__Dict[_syms[1]])
@@ -103,8 +91,7 @@ _types = Vector{DataType}(collect(__tName__.types))
 		return nothing
 		end		
 	function SaveJLD(dataFolder::String="__ConfigDataFolder__")::Nothing
-		# check params
-		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
+		dataFolder[end] !== '/' ? dataFolder *= "/" : nothing
 		isdir(dataFolder) || mkdir(dataFolder)
 		numRows = length(__tName__Dict[_syms[1]])
 		for i in 1:length(_syms)
@@ -118,8 +105,7 @@ _types = Vector{DataType}(collect(__tName__.types))
 		return nothing
 		end
 	function OpenJLD(dataFolder::String="__ConfigDataFolder__")::Nothing
-		dataFolder[end] !== '/' ? dataFolder = dataFolder*"/" : nothing
-		isdir(dataFolder) || mkdir(dataFolder)
+		dataFolder[end] !== '/' ? dataFolder *= "/" : nothing
 		for i in 1:length(_syms)
 			__tName__Dict[_syms[i]] = JLD2.load(
 				dataFolder * string(_syms[i]) * ".jld2",
