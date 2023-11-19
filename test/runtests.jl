@@ -4,7 +4,6 @@ using Test
 @testset "MmapDB.jl" begin
   # neuron.jl
   tmpDir = joinpath(@__DIR__, "MmapDB.test")
-  isdir(tmpDir) || mkdir(tmpDir)
   @test MmapDB.Init(tmpDir)
   mutable struct Something
     region_id::UInt8
