@@ -46,9 +46,11 @@ TableSomething.Open(false) # using true for persistance, false for read only
 
 ## Todos
 
-1. [ ] Support string field.
+1. [ ] Support field index.
+
+1. [ ] ~~Support string field.~~
 2. [ ] Split date files into multiple.
 
-8. [ ] Time sequence optimization. (move to private repo)
-99. [ ] Consider build a private layer of memory cache, then disable real-time synchronization on disk. (deprecated)
+8. [x] Time sequence optimization. (move to private repo)
+99. [ ] ~~Consider build a private layer of memory cache, then disable real-time synchronization on disk. (deprecated)~~
 
