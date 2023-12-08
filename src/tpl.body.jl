@@ -12,7 +12,19 @@ dataFolder = "__ConfigDataFolder__"
 		)
 		return nothing
 		end
-	function Create!(numRows::Int)::Nothing
+	function calcChunkSize(t::DataType, sizeChunkGB::Int)::Int
+		expBytes = trailing_zeros(sizeof(rand(t)))
+		if !iszero(expBytes)
+			capacityChunk = (sizeChunkGB << 30) >> expBytes
+		else
+			capacityChunk = round(Int, sizeChunkGB << 30 / sizeof(rand(t)))
+		end
+		end
+	function genChunks(numRows::Int, capacityChunk::Int)::Vector{UnitRange{Int}}
+		tmpInds = collect(1:capacityChunk:numRows)
+		map(x->x:x+capacityChunk-1, tmpInds)
+		end
+	function Create!(numRows::Int, sizeChunkGB::Int=2)::Nothing
 		for i in 1:length(_types)
 			f = open(dataFolder*string(_syms[i])*".bin", "w+")
 			openedFiles[_syms[i]] = f
