@@ -6,4 +6,5 @@ Config      = Dict{String,Any}(
 	"dataFolder" => "__ConfigDataFolder__" * "__tName__" * "/",
 	"lastNewID"  => 0,
 )
-openedFiles = Dict{Symbol, IOStream}()
+# openedFiles = Dict{Symbol, IOStream}()
+openedFiles = IOStream[]

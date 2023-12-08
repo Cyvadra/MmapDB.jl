@@ -27,7 +27,7 @@ dataFolder = "__ConfigDataFolder__"
 	function Create!(numRows::Int, sizeChunkGB::Int=2)::Nothing
 		for i in 1:length(_types)
 			f = open(dataFolder*string(_syms[i])*".bin", "w+")
-			openedFiles[_syms[i]] = f
+			push!(openedFiles,f)
 			__tName__Dict[_syms[i]] = mmap(
 				f, Vector{_types[i]}, numRows; grow=true, shared=true
 				)
@@ -40,7 +40,7 @@ dataFolder = "__ConfigDataFolder__"
 		numRows = parse(Int, read(dataFolder*"_num_rows",String))
 		for i in 1:length(_types)
 			f = open(dataFolder*string(_syms[i])*".bin", "r+")
-			openedFiles[_syms[i]] = f
+			push!(openedFiles,f)
 			__tName__Dict[_syms[i]] = mmap(
 				f, Vector{_types[i]}, numRows; grow=true, shared=shared
 				)
@@ -49,7 +49,7 @@ dataFolder = "__ConfigDataFolder__"
 		return nothing
 		end
 	function Close()::Nothing
-		close.( values(openedFiles) |> collect )
+		close.(openedFiles); empty!(openedFiles)
 		empty!(__tName__Dict)
 		Config["lastNewID"] = 0
 		return nothing
@@ -57,8 +57,8 @@ dataFolder = "__ConfigDataFolder__"
 
 # Memory logic
 	function CreateMem(numRows::Int)::Nothing
+		close.(openedFiles); empty!(openedFiles)
 		for i in 1:length(_types)
-			haskey(openedFiles, _syms[i]) && close(openedFiles[_syms[i]])
 			__tName__Dict[_syms[i]] = zeros(_types[i], numRows)
 		end
 		return nothing
