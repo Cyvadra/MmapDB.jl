@@ -42,5 +42,12 @@ using Test
   t.BatchInsert([v,v]); t.BatchInsert([v,v])
   @test t.Config["lastNewID"] == 11
   @test isequal(t.GetFieldRegion_id(11),11)
-  t.Close()
+  t.Close(); t.CreateMem(10)
+  # import
+  s = "1,1.2,3.4,5\n1,1.2,3.4,5\n1,1.2,3.4,5\n1,1.2,3.4,5\n1,1.2,3.4,5\n"
+  tmpFile = joinpath(@__DIR__, "Something.csv")
+  write(tmpFile, s)
+  @test t.ImportFromCSV(tmpFile) == 5
+  @test t.GetFieldTimestamp(1) == 5
+  rm(tmpFile)
 end

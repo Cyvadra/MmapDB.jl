@@ -164,6 +164,42 @@ dataFolder = "__ConfigDataFolder__"
 		end
 
 
+
+# CSV logic
+	function ImportFromCSV(filePath::AbstractString)::Int
+		# progress display
+		s = String(read(pipeline(Cmd(["wc","-l",filePath]))))
+		numRows = parse(Int,match(r"([0-9]+) ",s).captures[1])
+		# lock
+		lock(idLock)
+		tmpId = alignAI()+1
+		# import
+		f = open(filePath,"r")
+		@showprogress for i in 1:numRows
+			s = readline(f)
+			s = split(s,',')
+			for j in 1:length(_types)
+				SetField(_syms[j], tmpId, parse(_types[j], s[j]))
+			end
+			tmpId += 1
+		end
+		s = readline(f)
+		while !isempty(s)
+			@warn "unexpected row $tmpId"
+			s = split(s,',')
+			for j in 1:length(_types)
+				SetField(_syms[j], tmpId, parse(_types[j], s[j]))
+			end
+			tmpId += 1
+			s = readline(f)
+		end
+		close(f)
+		unlock(idLock)
+		Config["lastNewID"] = tmpId-1
+		end
+
+
+
 	function FunctionOnField(f::Function, sym::Symbol)::Vector
 		return f(__tName__Dict[sym])
 		end
