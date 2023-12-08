@@ -128,7 +128,11 @@ dataFolder = "__ConfigDataFolder__"
 		end
 	function alignAI()::Int
 		assumeI = findlast(x->!iszero(x), __tName__Dict[_syms[1]])
-		if all(iszero.(
+		if isnothing(assumeI)
+			Config["lastNewID"] = 0
+		elseif assumeI == length(__tName__Dict[_syms[1]])
+			Config["lastNewID"] = __tName__Dict[_syms[1]]
+		elseif all(iszero.(
 				map(s->__tName__Dict[s][assumeI+1], _syms)
 			))
 			Config["lastNewID"] = assumeI
