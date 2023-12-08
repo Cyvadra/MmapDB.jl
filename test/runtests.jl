@@ -18,6 +18,7 @@ using Test
   @test t.GetFieldLongitude(1) == 1.23
   @test iszero(t.GetFieldLongitude(2))
   @test isnothing(t.Close())
+  rm(tmpDir;force=true,recursive=true)
   # mem test
   @test isnothing(t.CreateMem(20))
   for i in 1:20
@@ -42,5 +43,4 @@ using Test
   @test t.Config["lastNewID"] == 11
   @test isequal(t.GetFieldRegion_id(11),11)
   t.Close()
-  rm(tmpDir;force=true,recursive=true)
 end
