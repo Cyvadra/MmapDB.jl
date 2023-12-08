@@ -8,3 +8,4 @@ Config      = Dict{String,Any}(
 )
 # openedFiles = Dict{Symbol, IOStream}()
 openedFiles = IOStream[]
+idLock      = Threads.SpinLock()

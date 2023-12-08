@@ -117,8 +117,10 @@ function GenerateCode(T::DataType)::Module
 	# InsertRow
 		s = "
 			function InsertRow(v)::Nothing
+				lock(idLock)
 				i = Config[\"lastNewID\"] + 1
-				Config[\"lastNewID\"] += 1"
+				Config[\"lastNewID\"] += 1
+				unlock(idLock)"
 		for i in 1:length(tmpNames)
 			s *= "
 				$(tName)Dict[:$(tmpNames[i])][i] = v.$(tmpNames[i])"
@@ -132,8 +134,10 @@ function GenerateCode(T::DataType)::Module
 			function InsertRow("
 		s = s * join(tmpNamesL, ", ")
 		s = s * ")::Nothing
+				lock(idLock)
 				i = Config[\"lastNewID\"] + 1
-				Config[\"lastNewID\"] += 1"
+				Config[\"lastNewID\"] += 1
+				unlock(idLock)"
 		for i in 1:length(tmpNames)
 			s *= "
 				$(tName)Dict[:$(tmpNames[i])][i] = $(tmpNamesL[i])"
@@ -145,9 +149,11 @@ function GenerateCode(T::DataType)::Module
 	# BatchInsert
 		s = "
 			function BatchInsert(v::Vector)::Nothing
+				lock(idLock)
 				i = Config[\"lastNewID\"] + 1 : Config[\"lastNewID\"] + length(v)
 				ids = collect(i)
-				Config[\"lastNewID\"] += length(v)"
+				Config[\"lastNewID\"] += length(v)
+				unlock(idLock)"
 		for i in 1:length(tmpNames)
 			s *= "
 				$(tName)Dict[:$(tmpNames[i])][ids] = map(x->x.$(tmpNames[i]), v)"

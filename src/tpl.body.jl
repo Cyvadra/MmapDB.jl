@@ -126,7 +126,7 @@ dataFolder = "__ConfigDataFolder__"
 		alignAI()
 		return nothing
 		end
-	function alignAI()
+	function alignAI()::Int
 		assumeI = findlast(x->!iszero(x), __tName__Dict[_syms[1]])
 		if all(iszero.(
 				map(s->__tName__Dict[s][assumeI+1], _syms)
