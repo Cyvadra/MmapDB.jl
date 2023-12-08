@@ -22,7 +22,7 @@ function GenerateCode(T::DataType)::Module
 		tmpNamesU= uppercasefirst.(tmpNames)
 		tmpNamesL= lowercasefirst.(tmpNames)
 		tmpTypes = string.(T.types)
-		tmpFileName = Config["cacheFolder"] * tName * "." * bytes2hex(rand(UInt8,3)) * "." * ".jl"
+		tmpFileName = Config["cacheFolder"] * tName * "." * bytes2hex(rand(UInt8,3)) *  ".jl"
 		if isfile(tmpFileName)
 			rm(tmpFileName)
 		end
@@ -53,6 +53,7 @@ function GenerateCode(T::DataType)::Module
 		s = read("$MOD_PATH/tpl.header.jl", String)
 		s = replace(s, "__tName__" => tName)
 		s = replace(s, "__ConfigDataFolder__" => Config["dataFolder"])
+		s = replace(s, "__ConfigModuleFile__" => tmpFileName)
 		write(f, s)
 	# generate structure
 		write(f, "\nmutable struct $(tName)\n")
