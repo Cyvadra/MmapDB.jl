@@ -180,4 +180,13 @@ dataFolder = "__ConfigDataFolder__"
 		return findnext(f, __tName__Dict[sym], n)
 		end
 
+	function SearchSorted(v, sym::Symbol)
+		return searchsorted(__tName__Dict[sym], v)
+		end
+	function SearchSortedFirst(v, sym::Symbol)
+		return searchsortedfirst(__tName__Dict[sym], v)
+		end
+	function SearchSortedLast(v, sym::Symbol)
+		return searchsortedlast(__tName__Dict[sym], v)
+		end
 
